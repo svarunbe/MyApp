@@ -1,0 +1,87 @@
+/* You can add global styles to this file, and also import other style files */
+@import "~bootstrap/dist/css/bootstrap.css";
+
+html, body {
+    height: 100%;
+}
+#container {
+    display: flex;
+    height: 100%;
+    width: 100%;
+    background-color:#fff;
+    padding-top: 10px;
+    flex-direction: column;
+}
+header {
+    background-color: #cdcdcd;
+    display: flex;
+    justify-content: center;
+  }
+header nav{
+  display: inline-flex;
+
+}
+#container article {
+    display: flex;
+    height: 100%;
+    width: 100%;
+}
+#container footer {
+  display: flex;
+  background-color: #cdcdcd;
+}
+.left{
+    flex:2;
+    overflow-y: auto;
+    min-height: 0px;
+    /*background: green;*/
+}
+.right{
+  flex:5;
+  overflow-y: auto;
+  min-height: 0px;
+  -webkit-box-shadow:  -1px 2px 34px 9px  rgba(0, 0, 0, 0.25);
+    box-shadow: -1px 2px 34px 9px  rgba(0, 0, 0,0.25);
+
+}
+.flex-container{
+  display: flex;
+  height: 100%;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+}
+.flex-item{
+  flex: 1;
+  background-color: #fff;
+  margin: 10px 0;
+  border-radius: 1%;
+  width: 93%;
+  border:1px solid gray;
+}
+.left-container{
+  height: inherit;
+  background-color:#fff;
+}
+.route.btn-group{
+  justify-content: flex-end;
+  display: flex;
+  margin: 2%;
+}
+.navbar-nav > li > a{
+  padding: 5px 20px;
+}
+
+/*::-webkit-scrollbar {
+    width: 12px;
+}
+
+::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.5);
+}*/
