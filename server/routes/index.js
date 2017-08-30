@@ -5,7 +5,7 @@ var router = express.Router();
 // Get users
 
 router.get('/', function(req, res, next) {
-  res.sendFile('index.html');
+  res.sendFile('./client/dist/index.html');
 });
 
 module.exports = router;

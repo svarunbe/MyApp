@@ -5,7 +5,7 @@ var mongo = require('../modules/mongoConnection.js');
 // Get users
 router.get('/', (req, res) => {
     mongo.connection((db) => {
-        db.collection('creditials')
+        db.collection('orders')
             .find()
             .toArray()
             .then((users) => {

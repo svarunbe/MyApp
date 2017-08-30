@@ -1,15 +1,18 @@
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
+import { HttpModule }    from '@angular/http';
 import { AppComponent } from './app.component';
 import { LeftComponent } from './left/left.component';
 import { RightComponent } from './right/right.component';
 import { OrdersComponent } from './right/orders/orders.component';
 import { NavbarComponent } from './navbar/navbar.component';
+import { StrategyComponent } from './right/strategy/strategy.component';
 
 const appRoutes: Routes = [
 
-  { path: 'orders', component: OrdersComponent }
+  { path: 'orders', component: OrdersComponent },
+  { path: 'strategies', component: StrategyComponent }
   // {
   //   path: 'heroes',
   //   component: HeroListComponent,
@@ -28,10 +31,12 @@ const appRoutes: Routes = [
     LeftComponent,
     RightComponent,
     OrdersComponent,
-    NavbarComponent
+    NavbarComponent,
+    StrategyComponent
   ],
   imports: [
     BrowserModule,
+    HttpModule,
     RouterModule.forRoot(
       appRoutes,
       { enableTracing: true } // <-- debugging purposes only
