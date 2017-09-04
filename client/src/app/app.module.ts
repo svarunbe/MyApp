@@ -8,11 +8,13 @@ import { RightComponent } from './right/right.component';
 import { OrdersComponent } from './right/orders/orders.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { StrategyComponent } from './right/strategy/strategy.component';
+import { AlertsComponent } from './right/alerts/alerts.component';
 
 const appRoutes: Routes = [
-
+  { path: '', redirectTo: '/orders', pathMatch: 'full' },
   { path: 'orders', component: OrdersComponent },
-  { path: 'strategies', component: StrategyComponent }
+  { path: 'strategies', component: StrategyComponent },
+  { path: 'alerts', component: AlertsComponent }
   // {
   //   path: 'heroes',
   //   component: HeroListComponent,
@@ -32,7 +34,8 @@ const appRoutes: Routes = [
     RightComponent,
     OrdersComponent,
     NavbarComponent,
-    StrategyComponent
+    StrategyComponent,
+    AlertsComponent
   ],
   imports: [
     BrowserModule,

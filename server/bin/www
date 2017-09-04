@@ -20,12 +20,18 @@ app.set('port', port);
  */
 
 var server = http.createServer(app);
+//var server = require('http').Server(app);
+var io = require('socket.io')(server);
+var connection=require('../modules/socketConnection.js');
+connection.listenSocket(io);
 
+
+server.listen(3000, "localhost");
 /**
  * Listen on provided port, on all network interfaces.
  */
 
-server.listen(port);
+//server.listen(port);
 server.on('error', onError);
 server.on('listening', onListening);
 

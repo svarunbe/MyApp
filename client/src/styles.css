@@ -1,4 +1,5 @@
 /* You can add global styles to this file, and also import other style files */
+@import '~font-awesome/css/font-awesome.css';
 @import "~bootstrap/dist/css/bootstrap.css";
 
 html, body {
@@ -19,7 +20,6 @@ header {
   }
 header nav{
   display: inline-flex;
-
 }
 #container article {
     display: flex;
@@ -35,7 +35,6 @@ header nav{
     flex:2;
     overflow-y: auto;
     min-height: 0px;
-    /*background: green;*/
 }
 .right{
   flex:5;
@@ -57,7 +56,7 @@ header nav{
   background-color: #fff;
   
   border-radius: 1%;
-  border:1px solid gray;
+  border:1px solid #e2dbdb;
   margin:5px 20px;
   padding: 10px;
 }

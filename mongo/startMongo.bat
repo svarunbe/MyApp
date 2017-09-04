@@ -1,0 +1,1 @@
+C:\Users\vijay\Desktop\KiteApp\MyApp\mongo\bin\mongod.exe --dbpath "C:\Users\vijay\Desktop\KiteApp\MyApp\mongo\data"  --storageEngine=mmapv1

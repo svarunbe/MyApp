@@ -1,0 +1,13 @@
+li.list-inline-item{
+	margin: 0 5px;
+}
+ul{
+	margin: 0;
+	padding: 0;
+}
+.red{
+	color:#f96d6d;
+}
+.green{
+	color:#299c38;
+}
