@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 
 import { Subject } from 'rxjs/Subject';
 import { Observable } from 'rxjs/Observable';
-import * as io from 'socket.io-client';
+
 @Component({
   selector: 'app-alerts',
   templateUrl: './alerts.component.html',
@@ -33,15 +33,10 @@ import * as io from 'socket.io-client';
 // }
 export class AlertsComponent implements OnInit {
 	
-  private socket;
   constructor() { }
 
   ngOnInit() {
-  	this.socket = io.connect();
-  	this.socket.emit('add-message', "message");    
-  	this.socket.on('news', (data) => {
-        console.log(data);
-      });  
+  	 
   }
 
 }

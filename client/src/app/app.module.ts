@@ -9,12 +9,14 @@ import { OrdersComponent } from './right/orders/orders.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { StrategyComponent } from './right/strategy/strategy.component';
 import { AlertsComponent } from './right/alerts/alerts.component';
+import { SharesComponent } from './right/shares/shares.component';
 
 const appRoutes: Routes = [
   { path: '', redirectTo: '/orders', pathMatch: 'full' },
   { path: 'orders', component: OrdersComponent },
   { path: 'strategies', component: StrategyComponent },
-  { path: 'alerts', component: AlertsComponent }
+  { path: 'alerts', component: AlertsComponent },
+  { path: 'shares', component: SharesComponent }
   // {
   //   path: 'heroes',
   //   component: HeroListComponent,
@@ -35,7 +37,8 @@ const appRoutes: Routes = [
     OrdersComponent,
     NavbarComponent,
     StrategyComponent,
-    AlertsComponent
+    AlertsComponent,
+    SharesComponent
   ],
   imports: [
     BrowserModule,

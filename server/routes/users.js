@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 var mongo = require('../modules/mongoConnection.js');
+var socket = require('../modules/socketConnection.js');
 /* GET users listing. */
 // Get users
 router.get('/', (req, res) => {
