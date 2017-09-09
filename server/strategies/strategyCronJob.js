@@ -1,7 +1,9 @@
 var express = require('express');
 var CronJob = require('cron').CronJob;
 var SMA = require('technicalindicators').SMA;
+var roundTo = require('round-to');
 var MACD = require('technicalindicators').MACD;
+var socketPort = require('../modules/socketConnection.js');
 
 var marketdata={
     "status": "success",
@@ -29,30 +31,49 @@ var marketdata={
     }
 }
 
+
 let startCronJob=function(){
-    console.log(this.getMACD());
-    /*var getFn={
+    //console.log(this.generateData(4));
+    var getFn={
                 simpleMovingAvg:this.simpleMovingAvg,
-                roundToTwoDecimalPlaces:this.roundToTwoDecimalPlaces
+                generateData:this.generateData,
+                getMACD:this.getMACD,
+                roundToDecimalPlaces:this.roundToDecimalPlaces
             };
     var job = new CronJob({
-        cronTime: '* * * * * *',
+        cronTime: '5 * * * * *',
         onTick: function() {
-            //console.log($this);
-            console.log('avg is '+getFn.simpleMovingAvg(marketdata.data.candles,getFn));
+           var data=getFn.generateData(4);        
+           var result=getFn.getMACD(data,5,8);
+           var len=result.length-1;
+           var macd=roundTo(result[len].MACD,2);
+           var signal=roundTo(result[len].signal,2);
+           if( macd > signal){
+            if(_global.socketId){
+                socketPort.emitEventToClient(_global.socketId,"buy");    
+            }
+            console.log(macd,signal);      
+           }
          },
          start: false,
          timeZone: 'America/Los_Angeles'
     });
-    job.start();*/
+    job.start();
 }
-
-let getMACD=function(){
+let generateData=function(closing){
+    var result=[];
+    marketdata.data.candles.filter(function(val){
+        result.push(val[closing]);
+        return;
+    });
+    return result;
+}
+let getMACD=function(data,fastPeriod,slowPeriod){
     var macdInput = {
-      values            : [127.75,129.02,132.75,145.40,148.98,137.52,147.38,139.05,137.23,149.30,162.45,178.95,200.35,221.90,243.23,243.52,286.42,280.27],
-      fastPeriod        : 5,
-      slowPeriod        : 8,
-      signalPeriod      : 3 ,
+      values            : data,
+      fastPeriod        : fastPeriod,
+      slowPeriod        : slowPeriod,
+      signalPeriod      : 3,
       SimpleMAOscillator: false,
       SimpleMASignal    : false
     }
@@ -72,5 +93,6 @@ let exponiatialMovingAvg=function(){
 module.exports = {
     'startCronJob':startCronJob,
     'simpleMovingAvg':simpleMovingAvg,
-    'getMACD':getMACD
+    'getMACD':getMACD,
+    'generateData':generateData
 };
