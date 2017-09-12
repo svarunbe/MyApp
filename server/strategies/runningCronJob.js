@@ -3,9 +3,8 @@ var CronJob = require('cron').CronJob;
 var SMA = require('technicalindicators').SMA;
 var roundTo = require('round-to');
 var MACD = require('technicalindicators').MACD;
-var socketPort = require('../modules/socketConnection.js');
-var KiteConnect = require("kiteconnect").KiteConnect;
-var token='';
+//var socketPort = require('../modules/socketConnection.js');
+
 var marketdata={
     "status": "success",
     "data": {
@@ -32,71 +31,38 @@ var marketdata={
     }
 }
 
-let startCronJob=function(){
-    this.kiteLogin();//console.log(this.generateData(4));
-    // var getFn={
-    //             simpleMovingAvg:this.simpleMovingAvg,
-    //             generateData:this.generateData,
-    //             getMACD:this.getMACD,
-    //             roundToDecimalPlaces:this.roundToDecimalPlaces,
-    //             kiteLogin:this.kiteLogin
-    //         };
-}
-let kiteLogin=function(){
-    var kc = new KiteConnect("vbpw084agezv9xvp");
-    //console.log(kc);
-    var result=kc.loginUrl();
-    //console.log(result);
-    kc.requestAccessToken("h8iwqltm8hwswfnheg0gb2m3577um73h", "1ogeryewziiava62tj3iwkscjzv4ke10")
-        .then(function(response) {
-            
-            init(response.data.access_token);
-        })
-        .catch(function(err) {
-            console.log(err.response);
-        })
 
-    function init(access_token) {
-        // Fetch equity margins.
-        // You can have other api calls here.
-        token=access_token;
-        kc.setAccessToken(access_token);
-        var fn={
-            "kt":kc
-        }
-        var job = new CronJob({
+let startCronJob=function(){
+    //console.log(this.generateData(4));
+    var getFn={
+                simpleMovingAvg:this.simpleMovingAvg,
+                generateData:this.generateData,
+                getMACD:this.getMACD,
+                roundToDecimalPlaces:this.roundToDecimalPlaces
+            };
+    var job = new CronJob({
         cronTime: '5 * * * * *',
         onTick: function() {
-           // var data=getFn.generateData(4);        
-           // var result=getFn.getMACD(data,5,8);
-           // var len=result.length-1;
-           // var macd=roundTo(result[len].MACD,2);
-           // var signal=roundTo(result[len].signal,2);
-           // if( macd > signal){
-           //  if(_global.socketId){
-           //      socketPort.emitEventToClient(_global.socketId,"signal",{"name":"REL","status":"buy"});    
-           //  }
-           //  console.log(macd,signal);      
-           // }
-            //getFn.kiteLogin();
-            
-            fn.kt.margins("equity")
-            .then(function(response) {
-                console.log(response);
-                // You got user's margin details.
-            }).catch(function(err) {
-                console.log(err);
-                // Something went wrong.
-            });
+           var data=getFn.generateData(4);        
+           var result=getFn.getMACD(data,5,8);
+           var len=result.length-1;
+           var macd=roundTo(result[len].MACD,2);
+           var signal=roundTo(result[len].signal,2);
+           if( macd > signal){
+            if(_global.socketId){
+                socketPort.emitEventToClient(_global.socketId,"signal",{"name":"REL","status":"buy"});    
+            }
+            console.log(macd,signal);      
+           }
+         },
+         onComplete:function(){
+          console.log("completed");
          },
          start: false,
          timeZone: 'America/Los_Angeles'
-        });
+    });
     job.start();
-        
-    }
 }
-
 let generateData=function(closing){
     var result=[];
     marketdata.data.candles.filter(function(val){
@@ -131,6 +97,5 @@ module.exports = {
     'startCronJob':startCronJob,
     'simpleMovingAvg':simpleMovingAvg,
     'getMACD':getMACD,
-    'generateData':generateData,
-    'kiteLogin':kiteLogin
+    'generateData':generateData
 };

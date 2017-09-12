@@ -20,8 +20,8 @@ let listenToSocket = (io) => {
     });*/
 };
 
-let emitEventToClient =(socket_id,message)=>{
-    socket.socketIO.to(socket_id).emit('news', { hello: message });
+let emitEventToClient =(socket_id,eventName,message)=>{
+    socket.socketIO.to(socket_id).emit(eventName, { "data": message });
 }
 module.exports = {
     'listenToSocket':listenToSocket,
