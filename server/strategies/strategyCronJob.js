@@ -46,8 +46,8 @@ let kiteLogin=function(){
     var kc = new KiteConnect("vbpw084agezv9xvp");
     //console.log(kc);
     var result=kc.loginUrl();
-    //console.log(result);
-    kc.requestAccessToken("h8iwqltm8hwswfnheg0gb2m3577um73h", "1ogeryewziiava62tj3iwkscjzv4ke10")
+    console.log(result);
+    kc.requestAccessToken("72crhd2lu4yce4p0rghn34v1sx8pb9iz", "1ogeryewziiava62tj3iwkscjzv4ke10")
         .then(function(response) {
             
             init(response.data.access_token);
@@ -64,37 +64,7 @@ let kiteLogin=function(){
         var fn={
             "kt":kc
         }
-        var job = new CronJob({
-        cronTime: '5 * * * * *',
-        onTick: function() {
-           // var data=getFn.generateData(4);        
-           // var result=getFn.getMACD(data,5,8);
-           // var len=result.length-1;
-           // var macd=roundTo(result[len].MACD,2);
-           // var signal=roundTo(result[len].signal,2);
-           // if( macd > signal){
-           //  if(_global.socketId){
-           //      socketPort.emitEventToClient(_global.socketId,"signal",{"name":"REL","status":"buy"});    
-           //  }
-           //  console.log(macd,signal);      
-           // }
-            //getFn.kiteLogin();
-            
-            fn.kt.margins("equity")
-            .then(function(response) {
-                console.log(response);
-                // You got user's margin details.
-            }).catch(function(err) {
-                console.log(err);
-                // Something went wrong.
-            });
-         },
-         start: false,
-         timeZone: 'America/Los_Angeles'
-        });
-    job.start();
-        
-    }
+    // }
 }
 
 let generateData=function(closing){
@@ -123,8 +93,7 @@ let simpleMovingAvg=function(marketdata,getFn){
     var result=SMA.calculate({period : period, values : prices});
     console.log(result);
 }
-
-let exponiatialMovingAvg=function(){
+let getHistoricalData=function(){
 
 }
 module.exports = {
@@ -132,5 +101,6 @@ module.exports = {
     'simpleMovingAvg':simpleMovingAvg,
     'getMACD':getMACD,
     'generateData':generateData,
-    'kiteLogin':kiteLogin
+    'kiteLogin':kiteLogin,
+    'getHistoricalData':getHistoricalData
 };

@@ -43,7 +43,8 @@ app.use(function(err, req, res, next) {
   res.send('error in file');
 });
 
-var cronJob = require('./strategies/strategyCronJob.js');
-cronJob.startCronJob();
-   
+//var cronJob = require('./strategies/strategyCronJob.js');
+//cronJob.startCronJob();
+var cronJob = require('./strategies/runningCronJob.js');
+cronJob.getShares();
 module.exports = app;
