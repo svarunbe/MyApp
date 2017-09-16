@@ -43,8 +43,18 @@ app.use(function(err, req, res, next) {
   res.send('error in file');
 });
 
+var KiteConnect = require("kiteconnect").KiteConnect;
+kiteControl= new KiteConnect("vbpw084agezv9xvp");
+
+_global={
+	"shares":[],
+	"access_token":"5i2yavbzjijthu4rsgh3dlbdqwvewbww",
+	"user_id":"",
+	"public_token":""
+};
 //var cronJob = require('./strategies/strategyCronJob.js');
 //cronJob.startCronJob();
 var cronJob = require('./strategies/runningCronJob.js');
-cronJob.getShares();
+//cronJob.getAccessToken();
+cronJob.runCronJob();
 module.exports = app;
