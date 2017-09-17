@@ -125,6 +125,10 @@ let getShares = function(job, fn) {
                                     if(structuredData[i].superTrend){
                                         console.log("buy at superTrend" + structuredData[i].close +" "+d);
                                     }
+                                    
+
+
+
                                     //console.log(structuredData[i].macd,structuredData[i].signal,structuredData[i].ema_2_days,structuredData[i].ema_5_days);
                                     /*if ((structuredData[i].ema_2_days > structuredData[i].ema_5_days) && (structuredData[i].macd > structuredData[i].signal) && (flagMacd == "buy" || flagMacd == "")) {
                                         console.log("buy at macd" + structuredData[i].close +" "+d);
@@ -161,6 +165,7 @@ let getShares = function(job, fn) {
         });
     });
 }
+
 let createStructure=function(data,macd,ema_2_days,ema_5_days,atr,superTrend){
     data=data.reverse();
     macd=macd.reverse();
@@ -193,21 +198,130 @@ let createStructure=function(data,macd,ema_2_days,ema_5_days,atr,superTrend){
     return newData.reverse();
 }
 
-let superTrend=function(HIGH,LOW,Multiplier,ATR,currentPrice,Current_Close,Previous_Close,Previous_UPPERBAND,Previous_LOWERBAND){
-    /*
-    BASIC UPPERBAND  =  (HIGH + LOW) / 2 + Multiplier * ATR
-BASIC LOWERBAND =  (HIGH + LOW) / 2 - Multiplier * ATR
+let calculateSuperTrend=function(){
+    for (var i = 0; i < data.length; i++) {
+                var d = data[i]
+                if (d) {
+                    var m = (day_high + day_low) / 2;
+                    var v = boolean(Multiplier < atr_superTrend);
+                    var g = m - v;
+                    var x = m + v;
 
-FINAL UPPERBAND = IF( (Current BASICUPPERBAND  < Previous FINAL UPPERBAND) and (Previous Close > Previous FINAL UPPERBAND)) THEN (Current BASIC UPPERBAND) ELSE Previous FINALUPPERBAND)
+                    if(i && data[i-1] && data[i-1].Close &&  data[i-1].Close> data[i-1]["_uptrend"]  && (data[i-1]["_uptrend"] < g)){     
+                      g=(data[i-1]["_uptrend"])
+                    }
 
-FINAL LOWERBAND = IF( (Current BASIC LOWERBAND  > Previous FINAL LOWERBAND) and (Previous Close < Previous FINAL LOWERBAND)) THEN (Current BASIC LOWERBAND) ELSE Previous FINAL LOWERBAND)
+                    if(data[i-1] && data[i-1].Close && data[i-1].Close <  data[i-1]["_downtrend"] && (data[i-1]["_downtrend"] < x)){
+                     x=(data[i-1]["_downtrend"]) 
+                    }           
+                    d["direction_supertrend"]=1;
 
-SUPERTREND = IF(Current Close <= Current FINAL UPPERBAND ) THEN Current FINAL UPPERBAND ELSE Current  FINAL LOWERBAND*/
-    var obj= {
+                    if(i){
+                      (d["direction_supertrend"]= data[i-1]["direction_supertrend"]);
+                      
+                      if(d.close > data[i-1]["Downtrend"]){
+                        (d["direction_supertrend"]=1)
+                      }else{
+                        if(d.close < data[i-1]["uptrend"]){
+                          d["direction_supertrend"]=-1;
+                        }
+                      } 
+                    
+                    d["_uptrend"]=g;
+                    d["_downtrend"]=x;
+
+                    d["trend"]= d["direction_supertrend"] > 0 ? g : x;
+
+                    if(i){
+                    if( data[i - 1]["direction_supertrend"] > 0){
+                      data[i-1]["_downtrend"] = null 
+                    }else{
+                      data[i- 1]["_uptrend"] = null
+                    }
+
+                    if(data[i]["direction_supertrend"] > 0){
+                      data[i]["uptrend"] = g 
+                    }else{
+                      data[i]["downtrend"] = x
+                    }                     
+                    }
+                }
+            }
+        }
+}
+let simpleMovingAvg = function(marketdata, getFn) {
+    var prices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15];
+    var period = 10;
+    var result = SMA.calculate({ period: period, values: prices });
+    console.log(result);
+}
+
+let checkKiteAccessToken = function(access_token) {
+    var fn = {
+        "kiteLogin": this.kiteLogin
+    }
+    kiteControl.margins("equity")
+        .then(function(response) {
+            console.log(response);
+            // You got user's margin details.
+        })
+        .catch(function(err) {
+            console.log(err);
+            fn.kiteLogin(access_token); // Something went wrong.
+        });
+}
+
+module.exports = {
+    'simpleMovingAvg': simpleMovingAvg,
+    'getMACD': getMACD,
+    'getEMA':getEMA,
+    'generateData': generateData,
+    'kiteLogin': kiteLogin,
+    //'getHistoricalData':getHistoricalData,
+    'getShares': getShares,
+    'checkKiteAccessToken': checkKiteAccessToken,
+    'createStructure':createStructure,
+    'averageTrueRange':averageTrueRange,
+    'superTrend':superTrend,
+    'calculateSuperTrend':calculateSuperTrend
+    //'getAccessToken':getAccessToken
+};
+/*let kiteWebSocket=function(public_token){
+
+var ticker = new KiteTicker("vbpw084agezv9xvp", "RV3206", public_token);
+
+// set autoreconnect with 10 maximum reconnections and 5 second interval
+ticker.autoReconnect(true, 10, 5)
+ticker.connect();
+ticker.on("tick", setTick);
+ticker.on("connect", subscribe);
+
+ticker.on("noreconnect", function() {
+    console.log("noreconnect")
+});
+
+ticker.on("reconnecting", function(reconnect_interval, reconnections) {
+    console.log("Reconnecting: attempet - ", reconnections, " innterval - ", reconnect_interval);
+});
+
+function setTick(ticks) {
+    console.log("Ticks", ticks);
+}
+
+function subscribe() {
+    var items = [738561];
+    ticker.subscribe(items);
+    ticker.setMode(ticker.modeFull, items);
+}
+}*/
+
+
+/*let superTrend=function(HIGH,LOW,Multiplier,ATR,currentPrice,Current_Close,Previous_Close,Previous_UPPERBAND,Previous_LOWERBAND){
+       var obj= {
         'trend':'lower',
         'UPPERBAND':'',
         'LOWERBAND':''
-    }
+     }
     var BASIC_UPPERBAND  =  (HIGH + LOW) / 2 + Multiplier * ATR;
     var BASIC_LOWERBAND =  (HIGH + LOW) / 2 - Multiplier * ATR;
 
@@ -250,69 +364,6 @@ SUPERTREND = IF(Current Close <= Current FINAL UPPERBAND ) THEN Current FINAL UP
         obj.trend='lower';
         return obj;
     }
-
-}
-let simpleMovingAvg = function(marketdata, getFn) {
-    var prices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15];
-    var period = 10;
-    var result = SMA.calculate({ period: period, values: prices });
-    console.log(result);
-}
-
-let checkKiteAccessToken = function(access_token) {
-    var fn = {
-        "kiteLogin": this.kiteLogin
-    }
-    kiteControl.margins("equity")
-        .then(function(response) {
-            console.log(response);
-            // You got user's margin details.
-        })
-        .catch(function(err) {
-            console.log(err);
-            fn.kiteLogin(access_token); // Something went wrong.
-        });
-}
-
-module.exports = {
-    'simpleMovingAvg': simpleMovingAvg,
-    'getMACD': getMACD,
-    'getEMA':getEMA,
-    'generateData': generateData,
-    'kiteLogin': kiteLogin,
-    //'getHistoricalData':getHistoricalData,
-    'getShares': getShares,
-    'checkKiteAccessToken': checkKiteAccessToken,
-    'createStructure':createStructure,
-    'averageTrueRange':averageTrueRange,
-    'superTrend':superTrend
-    //'getAccessToken':getAccessToken
-};
-/*let kiteWebSocket=function(public_token){
-
-var ticker = new KiteTicker("vbpw084agezv9xvp", "RV3206", public_token);
-
-// set autoreconnect with 10 maximum reconnections and 5 second interval
-ticker.autoReconnect(true, 10, 5)
-ticker.connect();
-ticker.on("tick", setTick);
-ticker.on("connect", subscribe);
-
-ticker.on("noreconnect", function() {
-    console.log("noreconnect")
-});
-
-ticker.on("reconnecting", function(reconnect_interval, reconnections) {
-    console.log("Reconnecting: attempet - ", reconnections, " innterval - ", reconnect_interval);
-});
-
-function setTick(ticks) {
-    console.log("Ticks", ticks);
-}
-
-function subscribe() {
-    var items = [738561];
-    ticker.subscribe(items);
-    ticker.setMode(ticker.modeFull, items);
-}
-}*/
+  }
+ }
+*/
