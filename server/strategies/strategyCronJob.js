@@ -57,18 +57,27 @@ let kiteLogin = function(session_token, job, fn) {
     }
 }
 let generateData = function(resData, closing, strategy, callback) {
-    var result = {
+    var resultArrayPattern = {
         'high':[],
         'low':[],
         'close':[]
     };
+    var resultObjectPattern=[];
     resData.filter(function(val) {
-        result.close.push(val[closing]);
-        result.high.push(val[2]);
-        result.low.push(val[3]);
+        resultArrayPattern.close.push(val[closing]);
+        resultArrayPattern.high.push(val[2]);
+        resultArrayPattern.low.push(val[3]);
+        resultObjectPattern.push({
+            'date':val[0],
+            'open':val[1],
+            'high':val[2],
+            'low':val[3],
+            'close':val[4],
+            'volume':val[5]
+        })
         return;
     });
-    callback(result, strategy);
+    callback(resultArrayPattern,resultObjectPattern,strategy);
 }
 let averageTrueRange=function(period,high,low,close){
     var input = {
@@ -99,18 +108,40 @@ let getShares = function(job, fn) {
         db.collection('shares').find().toArray(function(err, result) {
             if (err) throw err;
             _global.shares = result;
-            kiteControl.historical(result[0].token, "2017-08-19", "2017-09-16", "15minute")
+            kiteControl.historical(result[0].token, "2017-08-20", "2017-09-18", "15minute")
                 .then(function(response) {
                     //console.log(response);
                     var len = response.data.candles.length;
+                    var responceWithTR=fn.calculateTrueRange(response.data.candles);
                     //console.log(response.data.candles[len - 1]);
-                    fn.generateData(response.data.candles, 4, _global.shares[0].strategy, function(res, strategy) {
-                        //console.log(res,strategy);
-                        if (strategy == "macd") {
-                            var macdOutput = fn.getMACD(res.close,5,8);
-                            var ema_2_days=fn.getEMA(res.close,2);
-                            var ema_5_days=fn.getEMA(res.close,5);
-                            var avgTrueRange=fn.averageTrueRange(7,res.high,res.low,res.close);
+                    fn.generateData(response.data.candles, 4, _global.shares[0].strategy, function(resArr,resObj,strategy) {
+                        
+                        var trueRangeData=fn.calculateTrueRange(resObj);
+                        var atrSuperTrend=fn.calculateATRSuperTrend(trueRangeData);
+                        var superTrend=fn.calculateSuperTrend(atrSuperTrend,3);
+                        //console.log(superTrend);
+                        for (var i = 0; i < superTrend.length; i++) {
+                                var d = new Date(superTrend[i].date);
+                                var today = new Date("2017-09-18T09:15:00+0530");
+                                if (d.getDate() == today.getDate()) {
+                                    //console.log(superTrend[i]);
+                                    if(i!=0){
+                                      if (superTrend[i-1].direction_supertrend > superTrend[i].direction_supertrend) {
+                                        console.log("Downtrend " +superTrend[i].date);
+                                      } else if (superTrend[i-1].direction_supertrend < superTrend[i].direction_supertrend) {
+                                          console.log("uptrend "+ superTrend[i].date);
+                                      }else{
+                                        //console.log(superTrend[i-1].direction_supertrend,superTrend[i].direction_supertrend)
+                                      }  
+                                    }
+                                }
+                            }
+
+                        if (strategy == "no") {
+                            var macdOutput = fn.getMACD(resArr.close,5,8);
+                            var ema_2_days=fn.getEMA(resArr.close,2);
+                            var ema_5_days=fn.getEMA(resArr.close,5);
+                            var avgTrueRange=fn.averageTrueRange(7,resArr.high,resArr.low,resArr.close);
                             var structuredData=fn.createStructure(response.data.candles,macdOutput,ema_2_days,ema_5_days,avgTrueRange,fn.superTrend);
                             
                             var flagMacd = "";
@@ -165,7 +196,52 @@ let getShares = function(job, fn) {
         });
     });
 }
+let calculateTrueRange=function(data){
+    for(var i=0;i<data.length;i++){
+        if(data[i-1]){
+            data[i].trueRange = Math.max(data[i].high - data[i].low, data[i].high - data[i-1].close , data[i-1].close - data[i].low);
+        }else{
+            data[i].trueRange=data[i].high - data[i].low;
+        }
+    }
+    return data;
+}
+let calculateATRSuperTrend=function(data,no_days){
+    var n={ startFrom:0 };
+    var no_days=no_days || 7 ;
 
+    if(data.length < (no_days + 1)){
+        console.log("error in atr superTrend");
+        return false;
+    }else{
+
+    for (var i = 0, u = Math.max(n.startFrom, 1); (u < data.length); u++) {
+       var currentData = data[u],
+          prev_data = data[u-1],
+          trueRange = currentData.trueRange;
+        if(data[u-1]["sum_true_range_supertrend"]){
+          i = data[u-1]["sum_true_range_supertrend"]
+        }
+        i += trueRange;
+
+        if(u > no_days){
+          i -= data[u-no_days]["true_range_supertrend"];
+        }
+        data[u]["true_range_supertrend"] = trueRange;
+        data[u]["sum_true_range_supertrend"]=i;
+        
+        if(u===no_days){
+          data[u]["atr_superTrend"] = i/no_days;
+        }else{
+          if(u > no_days){
+            data[u]["atr_superTrend"] = ((data[u-1]["atr_superTrend"] * (no_days - 1) + trueRange )/ no_days)    
+          }
+        } 
+    }
+    return data;
+  }
+  
+}
 let createStructure=function(data,macd,ema_2_days,ema_5_days,atr,superTrend){
     data=data.reverse();
     macd=macd.reverse();
@@ -177,7 +253,7 @@ let createStructure=function(data,macd,ema_2_days,ema_5_days,atr,superTrend){
         if(macd[i] && ema_2_days[i] && ema_5_days[i] && atr[i]){
             var currentPrice=(data[i][1]+data[i][2]+data[i][3]+data[i][4])/4;
             var Previous_Close=data[i]
-            superTrend(data[i][2],data[i][3],3,atr[i],currentPrice,data[i][4],)
+            //superTrend(data[i][2],data[i][3],3,atr[i],currentPrice,data[i][4],)
             newData.push({
             'date':data[i][0],
             'open':data[i][1],
@@ -198,42 +274,97 @@ let createStructure=function(data,macd,ema_2_days,ema_5_days,atr,superTrend){
     return newData.reverse();
 }
 
-let calculateSuperTrend=function(){
+let calculateSuperTrend=function(data,Multiplier){
+for (var p = 0; p < data.length; p++) {
+    //var d = f[p];
+    if (data[p]) {
+        var m = (data[p].high + data[p].low) / 2
+        , v = (Multiplier * data[p].atr_superTrend)
+        , g = m - v
+        , x = m + v;
+                        
+        p && 
+        (
+            data[p-1] 
+            && data[p-1].close 
+            && (data[p-1].close > data[p-1]["_uptrend"]) 
+            && (data[p-1]["_uptrend"] > g) 
+            && (g = data[p-1]["_uptrend"]),
+
+            data[p-1] 
+            && data[p-1].close 
+            && (data[p-1].close < data[p-1]["_downtrend"]) 
+            && (data[p - 1]["_downtrend"] < x) 
+            && (x = data[p-1]["_downtrend"])
+        ),
+
+        data[p]["direction_supertrend"] = 1,
+        
+        p && 
+        (  data[p]["direction_supertrend"] 
+            = data[p-1]["direction_supertrend"],
+          (data[p].close > data[p - 1]["_downtrend"]) 
+          ? data[p]["direction_supertrend"] = 1 
+          : (data[p].close > data[p - 1]["_uptrend"]) 
+          && (data[p]["direction_supertrend"] = -1)
+        ),
+
+        data[p]["_uptrend"] = g,
+
+        data[p]["_downtrend"] = x,
+
+        data[p]["trend"] = (data[p]["direction_supertrend"] > 0) ? g : x,
+        
+        p && 
+        (  
+            (data[p - 1]["direction_supertrend"] > 0)  
+            ? data[p - 1]["_downtrend"] = null 
+            : data[p - 1]["_uptrend"] = null,
+
+           (data[p]["direction_supertrend"] >  0) 
+           ? data[p]["_uptrend"] = g 
+           : data[p]["_downtrend"] = x
+        )
+     }
+    }
+    return data;
+}
+/*let calculateSuperTrend=function(data,Multiplier){
     for (var i = 0; i < data.length; i++) {
-                var d = data[i]
-                if (d) {
-                    var m = (day_high + day_low) / 2;
-                    var v = boolean(Multiplier < atr_superTrend);
-                    var g = m - v;
-                    var x = m + v;
+        //var d = data[i]
+        if (data[i]) {
+            var m = (data[i].high + data[i].low) / 2;
+            var v = (Multiplier * data[i].atr_superTrend);
+            var g = m - v;
+            var x = m + v;
 
-                    if(i && data[i-1] && data[i-1].Close &&  data[i-1].Close> data[i-1]["_uptrend"]  && (data[i-1]["_uptrend"] < g)){     
-                      g=(data[i-1]["_uptrend"])
+            if(i && data[i-1] && data[i-1].close &&  data[i-1].close > data[i-1]["_uptrend"]  && (data[i-1]["_uptrend"] > g)){     
+              g=(data[i-1]["_uptrend"])
+            }
+
+            if(data[i-1] && data[i-1].close && data[i-1].close <  data[i-1]["_downtrend"] && (data[i-1]["_downtrend"] < x)){
+             x=(data[i-1]["_downtrend"]) 
+            }           
+            data[i]["direction_supertrend"]=1;
+
+            if(i){
+                  (data[i]["direction_supertrend"]= data[i-1]["direction_supertrend"]);
+                  
+                  if(data[i].close > data[i-1]["Downtrend"]){
+                    (data[i]["direction_supertrend"]=1)
+                  }else{
+                    if(data[i].close < data[i-1]["uptrend"]){
+                      data[i]["direction_supertrend"]=-1;
                     }
+                  } 
+            }
+            data[i]["_uptrend"]=g;
+            data[i]["_downtrend"]=x;
 
-                    if(data[i-1] && data[i-1].Close && data[i-1].Close <  data[i-1]["_downtrend"] && (data[i-1]["_downtrend"] < x)){
-                     x=(data[i-1]["_downtrend"]) 
-                    }           
-                    d["direction_supertrend"]=1;
+            data[i]["trend"]= data[i]["direction_supertrend"] > 0 ? g : x;
 
-                    if(i){
-                      (d["direction_supertrend"]= data[i-1]["direction_supertrend"]);
-                      
-                      if(d.close > data[i-1]["Downtrend"]){
-                        (d["direction_supertrend"]=1)
-                      }else{
-                        if(d.close < data[i-1]["uptrend"]){
-                          d["direction_supertrend"]=-1;
-                        }
-                      } 
-                    
-                    d["_uptrend"]=g;
-                    d["_downtrend"]=x;
-
-                    d["trend"]= d["direction_supertrend"] > 0 ? g : x;
-
-                    if(i){
-                    if( data[i - 1]["direction_supertrend"] > 0){
+                if(i){
+                    if(data[i - 1]["direction_supertrend"] > 0){
                       data[i-1]["_downtrend"] = null 
                     }else{
                       data[i- 1]["_uptrend"] = null
@@ -244,11 +375,11 @@ let calculateSuperTrend=function(){
                     }else{
                       data[i]["downtrend"] = x
                     }                     
-                    }
-                }
-            }
+                 }
         }
-}
+    }
+    return data;
+}*/
 let simpleMovingAvg = function(marketdata, getFn) {
     var prices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15];
     var period = 10;
@@ -282,8 +413,9 @@ module.exports = {
     'checkKiteAccessToken': checkKiteAccessToken,
     'createStructure':createStructure,
     'averageTrueRange':averageTrueRange,
-    'superTrend':superTrend,
-    'calculateSuperTrend':calculateSuperTrend
+    'calculateSuperTrend':calculateSuperTrend,
+    'calculateTrueRange':calculateTrueRange,
+    'calculateATRSuperTrend':calculateATRSuperTrend
     //'getAccessToken':getAccessToken
 };
 /*let kiteWebSocket=function(public_token){
