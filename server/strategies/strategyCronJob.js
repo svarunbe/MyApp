@@ -108,7 +108,7 @@ let getShares = function(job, fn) {
         db.collection('shares').find().toArray(function(err, result) {
             if (err) throw err;
             _global.shares = result;
-            kiteControl.historical(result[0].token, "2017-08-24", "2017-09-19", "5minute")
+            kiteControl.historical(result[0].token, "2017-08-25", "2017-09-20", "15minute")
                 .then(function(response) {
                     //console.log(response);
                     var len = response.data.candles.length;
@@ -129,52 +129,82 @@ let getShares = function(job, fn) {
                             var structuredData=fn.createStructure(response.data.candles,macdOutput,ema_2_days,ema_5_days,avgTrueRange,arr_adx,kstArr);                            
                             var flagMacd = "";
                             var flagEma="";
-                            var profitMacd = 0;
+                            var profitADX = 0;
                             var profitEma = 0;
+                            var profitKST=0;
+                            var profitMacd=0;
                             //console.log(structuredData);
                             var trendADX="";
                             var trendEMA="";
                             var trendKST="";
+                            var trendmacd="";
+
                             for (var i = 0; i < structuredData.length; i++) {
                                 var d = new Date(structuredData[i].date);
-                                var today = new Date("2017-09-19T09:15:00+0530");
+                                var today = new Date("2017-09-20T09:15:00+0530");
                                 if (d.getDate() === today.getDate()) { 
                                     //ADX Strategy
-                                   // if(structuredData[i].pdm > structuredData[i].mdm && trendADX!="up"  && structuredData[i].adx > 20){
-                                   //  console.log("uptrend ADX"+structuredData[i].date)
-                                   //  trendADX="up";
-                                   //  profitMacd -= structuredData[i].close;
-                                   // }else if(trendADX=="up" && ((structuredData[i].adx-4) < structuredData[i-1].adx)) {  // (structuredData[i].pdm < structuredData[i].mdm && trend!="down"){
-                                   //  console.log("downtrend "+structuredData[i].date)
-                                   //  trendADX="down";
-                                   //  profitMacd += structuredData[i].close;
-                                   // }
+   /*if(structuredData[i].pdm > structuredData[i].mdm && trendADX!="up"  && structuredData[i].adx > 20){
+    console.log("uptrend ADX"+structuredData[i].date)
+    trendADX="up";
+    profitADX -= structuredData[i].close;
+   }else if(trendADX=="up" && ((structuredData[i].adx-4) < structuredData[i-1].adx)) {  // (structuredData[i].pdm < structuredData[i].mdm && trend!="down"){
+    console.log("downtrend ADX"+structuredData[i].date)
+    trendADX="down";
+    profitADX += structuredData[i].close;
+   }
 
-                                   //EMA strategy
-                                    if ((structuredData[i].ema_2_days > structuredData[i-1].ema_2_days) && (structuredData[i].ema_2_days > structuredData[i].ema_5_days) && trendEMA!="up" && (structuredData[i].adx > structuredData[i-1].adx) && (structuredData[i].pdm > structuredData[i].mdm)) {
-                                        console.log("uptrend EMA"+structuredData[i].date+ " "+structuredData[i].close)
-                                        trendEMA = "up";
-                                        profitEma -= structuredData[i].close;
-                                    } else if ((structuredData[i].ema_2_days < structuredData[i-1].ema_2_days) && (structuredData[i].ema_2_days < structuredData[i].ema_5_days || structuredData[i].pdm < (structuredData[i].adx-5) ) && trendEMA=="up") {
-                                        console.log("downtrend EMA"+structuredData[i].date+" "+structuredData[i].close)
-                                        trendEMA = "down";
-                                        profitEma += structuredData[i].close;
-                                    }
-                                   //KST strategy
-                                   if(structuredData[i].kstSignal!=undefined && structuredData[i].kst > structuredData[i].kstSignal && structuredData[i].kst > 0 && trendKST!="up") {
-                                        console.log("uptrend KST"+structuredData[i].date+ " "+structuredData[i].close)
-                                        trendKST = "up";
-                                        profitMacd -= structuredData[i].close;
-                                   }else if(structuredData[i].kstSignal!=undefined && structuredData[i].kst < structuredData[i].kstSignal && trendKST=="up"){
-                                        console.log("downtrend KST"+structuredData[i].date+" "+structuredData[i].close)
-                                        trendKST = "down";
-                                        profitMacd += structuredData[i].close;
-                                   }
+   //EMA strategy
+    if ((structuredData[i].ema_2_days > structuredData[i-1].ema_2_days) && (structuredData[i].ema_2_days > structuredData[i].ema_5_days) && trendEMA!="up" && (structuredData[i].adx > structuredData[i-1].adx) && (structuredData[i].pdm > structuredData[i].mdm)) {
+        console.log("uptrend EMA"+structuredData[i].date+ " "+structuredData[i].close)
+        trendEMA = "up";
+        profitEma -= structuredData[i].close;
+    } else if ((structuredData[i].ema_2_days < structuredData[i-1].ema_2_days) && (structuredData[i].ema_2_days < structuredData[i].ema_5_days || structuredData[i].pdm < (structuredData[i].adx-5) ) && trendEMA=="up") {
+        console.log("downtrend EMA"+structuredData[i].date+" "+structuredData[i].close)
+        trendEMA = "down";
+        profitEma += structuredData[i].close;
+    }
+   //KST strategy
+   if(structuredData[i].kstSignal!=undefined && structuredData[i].kst > structuredData[i].kstSignal && structuredData[i].kst > 0 && trendKST!="up") {
+        console.log("uptrend KST"+structuredData[i].date+ " "+structuredData[i].close)
+        trendKST = "up";
+        profitKST -= structuredData[i].close;
+   }else if(structuredData[i].kstSignal!=undefined && structuredData[i].kst < structuredData[i].kstSignal && trendKST=="up"){
+        console.log("downtrend KST"+structuredData[i].date+" "+structuredData[i].close)
+        trendKST = "down";
+        profitKST += structuredData[i].close;
+   }
+
+   //macd strategy
+   if(structuredData[i].macd > 0 && structuredData[i].macd > structuredData[i].signal && trendmacd!="up") {
+        console.log("uptrend macd"+structuredData[i].date+ " "+structuredData[i].close)
+        trendmacd = "up";
+        profitMacd -= structuredData[i].close;
+   }else if(structuredData[i].macd < structuredData[i].signal && trendmacd=="up"){
+        console.log("downtrend macd"+structuredData[i].date+" "+structuredData[i].close)
+        trendmacd = "down";
+        profitMacd += structuredData[i].close;
+   }*/
+
+   if( trendmacd!="up" && structuredData[i].adx > 20 && structuredData[i].kst > structuredData[i].kstSignal && structuredData[i].macd > 0 && structuredData[i].macd > structuredData[i].signal){
+        console.log("buy "+structuredData[i].date);
+        trendmacd="up";
+        profitMacd -= structuredData[i].close;
+   }else if(trendmacd=="up" && structuredData[i].kst < structuredData[i].kstSignal){
+        console.log("sell "+structuredData[i].date);
+        trendmacd="down";
+        profitMacd += structuredData[i].close;
+   }
+   // adx > 30
+   // macd > signal && macd > 0
+   // kst > 0 && kast >  kstSignal
+   //
 
 
-                               }
-                            }
-                            console.log("total profit KST" + profitMacd  + " total profit Ema " + profitEma);
+
+}
+}console.log(profitMacd);
+//console.log("total profit macd" + profitMacd  + " total profit Ema " + profitEma + " total profit KST " + profitKST +" total profit ADX " + profitADX);
                         }
                     });
                 })
