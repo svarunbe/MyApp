@@ -128,32 +128,44 @@ let getShares = function(job, fn) {
                 ((lastDate.getMonth() + 1).toString().length == 1 ? '0' + (lastDate.getMonth() + 1) : (lastDate.getMonth() + 1)) +
                 '-' + lastDate.getDate();
 
-            kiteControl.historical(result[2].token, lastDate, todayDate, "15minute")
+            kiteControl.historical(result[2].token, lastDate, todayDate, "5minute")
                 .then(function(response) {
                     fn.generateData(response.data.candles, 4, _global.shares[0].strategy, function(resArr, resObj, strategy) {
-                        if (strategy == "macd") {
-                                var profitMacd = 0,
-                                trendmacd = "";
+                        var structuredData=fn.createStructure(response.data.candles,resArr,fn);
+                        var profitMacd = 0,
+                            trendmacd = "";
+                        for (var i = 0; i < structuredData.length; i++) {
+                                var d = new Date(structuredData[i].date);
+                                var today = new Date("2017-09-26T09:15:00+0530");
+                                if (d.getDate() == today.getDate()) {
+                                    if (strategy == "macd") {
+                                    //console.log(structuredData[i]);
+                                    if (trendmacd != "up" && structuredData[i].adx > 20 
+                                        && structuredData[i].rsi > 20 
+                                        && structuredData[i].kst > structuredData[i].kstSignal 
+                                        && structuredData[i].macd > 0 
+                                        && structuredData[i].macd > structuredData[i].signal) {
+                                        console.log("buy " + structuredData[i].date);
+                                        trendmacd = "up";
+                                        profitMacd -= structuredData[i].close;
+                                    } else if (trendmacd == "up" && structuredData[i].kst < structuredData[i].kstSignal) {
+                                        console.log("sell " + structuredData[i].date);
+                                        trendmacd = "down";
+                                        profitMacd += structuredData[i].close;
+                                    }
+                                    /*buy signal*/
+                                    // adx > 30
+                                    // macd > signal && macd > 0
+                                    // kst > 0 && kast >  kstSignal
+                                    // rsi < 50
 
-                                if (trendmacd != "up" && structuredData.adx > 20 && structuredData.rsi < 30 && structuredData.kst > structuredData.kstSignal && structuredData.macd > 0 && structuredData.macd > structuredData.signal) {
-                                    console.log("buy " + structuredData.date);
-                                    trendmacd = "up";
-                                    profitMacd -= structuredData.close;
-                                } else if (trendmacd == "up" && structuredData.kst < structuredData.kstSignal) {
-                                    console.log("sell " + structuredData.date);
-                                    trendmacd = "down";
-                                    profitMacd += structuredData.close;
+                                    /*sell signal signal*/
+                                    // kast <  kstSignal
+                                    
                                 }
-                                /*buy signal*/
-                                // adx > 30
-                                // macd > signal && macd > 0
-                                // kst > 0 && kast >  kstSignal
-                                // rsi < 30
-
-                                /*sell signal signal*/
-                                // kast <  kstSignal
-                                console.log(profitMacd);
+                            }
                         }
+                        console.log(profitMacd);
                     });
                 })
                 .catch(function(err) {
@@ -164,31 +176,29 @@ let getShares = function(job, fn) {
         });
     });
 }
-let createStructure = function(data,) {
-    var macdOutput = fn.getMACD(resArr.close, 5, 10),
+let createStructure = function(candles,resArr,fn) {
+    var macd = fn.getMACD(resArr.close, 5, 10),
         ema_2_days = fn.getEMA(resArr.close, 2),
         ema_5_days = fn.getEMA(resArr.close, 5),
-        arr_rsi = fn.getRSI(7, resArr.close),
-        avgTrueRange = fn.averageTrueRange(7, resArr.high, resArr.low, resArr.close),
-        arr_adx = fn.getADX(7, resArr.high, resArr.low, resArr.close),
-        kstArr = fn.getKST(7, resArr.high, resArr.low, resArr.close),
-        structuredData = fn.createStructure(response.data.candles, macdOutput, ema_2_days, ema_5_days, avgTrueRange, arr_adx, kstArr, arr_rsi),
-    
-
-    data = data.reverse()[0];
-    macd = macd.reverse()[0];
-    ema_2_days = ema_2_days.reverse()[0];
-    ema_5_days = ema_5_days.reverse()[0];
-    adx = adx.reverse()[0];
-    rsi = rsi.reverse()[0];
-
-    return {
-        'date': data[0],
-        'open': data[1],
-        'high': data[2],
-        'low': data[3],
-        'close': data[4],
-        'volume': data[5],
+        rsi = fn.getRSI(7, resArr.close),
+        //avgTrueRange = fn.averageTrueRange(7, resArr.high, resArr.low, resArr.close),
+        adx = fn.getADX(7, resArr.high, resArr.low, resArr.close),
+        kst = fn.getKST(7, resArr.high, resArr.low, resArr.close),
+        //data = resArr.reverse()[0],
+        macd = macd.reverse(),
+        ema_2_days = ema_2_days.reverse(),
+        ema_5_days = ema_5_days.reverse(),
+        adx = adx.reverse(),
+        rsi = rsi.reverse(),
+        kst =kst.reverse(),
+        candles=candles.reverse();
+    /*return {
+        'date': candles[candles.length-1][0],
+        'open': candles[candles.length-1][1],
+        'high': candles[candles.length-1][2],
+        'low': candles[candles.length-1][3],
+        'close': candles[candles.length-1][4],
+        'volume': candles[candles.length-1][5],
         'macd': macd.MACD,
         'signal': macd.signal,
         'ema_2_days': ema_2_days,
@@ -199,7 +209,34 @@ let createStructure = function(data,) {
         'kst': kst.kst,
         'kstSignal': kst.signal,
         'rsi': rsi
+    }*/
+    var newData=[];
+    for(var i=0;i<candles.length;i++){
+        if(macd[i] && ema_2_days[i] && ema_5_days[i] && adx[i] && rsi[i] && kst[i]){
+            
+            newData.push({
+            'date':candles[i][0],
+            'open':candles[i][1],
+            'high':candles[i][2],
+            'low':candles[i][3],
+            'close':candles[i][4],
+            'volume':candles[i][5],
+            'macd':macd[i].MACD,
+            'signal':macd[i].signal,
+            'ema_2_days':ema_2_days[i],
+            'ema_5_days':ema_5_days[i],
+            'adx': adx[i].adx,
+            'pdm': adx[i].pdi,
+            'mdm': adx[i].mdi,
+            'kst': kst[i].kst,
+            'kstSignal': kst[i].signal,
+            'rsi': rsi[i]
+         });    
+        }else{
+            i=candles.length;
+        }    
     }
+    return newData.reverse();
 }
 let simpleMovingAvg = function(marketdata, getFn) {
     var prices = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 15];
