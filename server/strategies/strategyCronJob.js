@@ -8,6 +8,7 @@ var ATR = require('technicalindicators').ATR;
 var ADX = require('technicalindicators').ADX;
 var KST = require('technicalindicators').KST;
 var RSI = require('technicalindicators').RSI;
+var ForceIndex = require('technicalindicators').ForceIndex;
 var socketPort = require('../modules/socketConnection.js');
 let mongo = require('../modules/mongoConnection.js');
 var KiteTicker = require("kiteconnect").KiteTicker;
@@ -36,13 +37,15 @@ let generateData = function(resData, closing, strategy, callback) {
     var resultArrayPattern = {
         'high': [],
         'low': [],
-        'close': []
+        'close': [],
+        'volume':[]
     };
     var resultObjectPattern = [];
     resData.filter(function(val) {
         resultArrayPattern.close.push(val[closing]);
         resultArrayPattern.high.push(val[2]);
         resultArrayPattern.low.push(val[3]);
+        resultArrayPattern.volume.push(val[5]);
         resultObjectPattern.push({
             'date': val[0],
             'open': val[1],
@@ -91,6 +94,15 @@ let getRSI = function(period, close) {
     };
     return RSI.calculate(inputRSI)
 }
+let getForceIndex = function(period, close,volume) {
+
+    var inputFI = {
+        close: close,
+        volume:volume,
+        period: period
+    };
+    return ForceIndex.calculate(inputFI)
+}
 
 let getKST = function(period, high, low, close) {
     var input = {
@@ -128,19 +140,24 @@ let getShares = function(job, fn) {
                 ((lastDate.getMonth() + 1).toString().length == 1 ? '0' + (lastDate.getMonth() + 1) : (lastDate.getMonth() + 1)) +
                 '-' + lastDate.getDate();
 
-            kiteControl.historical(result[2].token, lastDate, todayDate, "5minute")
+            kiteControl.historical(result[1].token, lastDate, todayDate, "5minute")
                 .then(function(response) {
                     fn.generateData(response.data.candles, 4, _global.shares[0].strategy, function(resArr, resObj, strategy) {
+                        
                         var structuredData=fn.createStructure(response.data.candles,resArr,fn);
                         var profitMacd = 0,
                             trendmacd = "";
                         for (var i = 0; i < structuredData.length; i++) {
                                 var d = new Date(structuredData[i].date);
-                                var today = new Date("2017-09-26T09:15:00+0530");
+                                var today = new Date("2017-09-27T09:15:00+0530");
                                 if (d.getDate() == today.getDate()) {
                                     if (strategy == "macd") {
-                                    //console.log(structuredData[i]);
-                                    if (trendmacd != "up" && structuredData[i].adx > 20 
+                                    
+                                    if (trendmacd != "up" 
+                                        //&& structuredData[i].forceIndex > 0 
+                                        && structuredData[i].adx > 20 
+                                        && structuredData[i].adx > structuredData[i-1].adx
+                                        && structuredData[i].pdm > structuredData[i].mdm
                                         && structuredData[i].rsi > 20 
                                         && structuredData[i].kst > structuredData[i].kstSignal 
                                         && structuredData[i].macd > 0 
@@ -148,13 +165,15 @@ let getShares = function(job, fn) {
                                         console.log("buy " + structuredData[i].date);
                                         trendmacd = "up";
                                         profitMacd -= structuredData[i].close;
-                                    } else if (trendmacd == "up" && structuredData[i].kst < structuredData[i].kstSignal) {
+                                    } else if (trendmacd == "up" 
+                                        && structuredData[i].kst < structuredData[i].kstSignal) {
                                         console.log("sell " + structuredData[i].date);
                                         trendmacd = "down";
                                         profitMacd += structuredData[i].close;
                                     }
                                     /*buy signal*/
-                                    // adx > 30
+                                    // FI > 0
+                                    // adx > 30  && adx > 
                                     // macd > signal && macd > 0
                                     // kst > 0 && kast >  kstSignal
                                     // rsi < 50
@@ -169,7 +188,7 @@ let getShares = function(job, fn) {
                     });
                 })
                 .catch(function(err) {
-                    console.log(err);
+                    console.log("err getting historical data " + err);
                 });
             //job.start();
             db.close();
@@ -184,7 +203,7 @@ let createStructure = function(candles,resArr,fn) {
         //avgTrueRange = fn.averageTrueRange(7, resArr.high, resArr.low, resArr.close),
         adx = fn.getADX(7, resArr.high, resArr.low, resArr.close),
         kst = fn.getKST(7, resArr.high, resArr.low, resArr.close),
-        //data = resArr.reverse()[0],
+        forceIndex =fn.getForceIndex(7,resArr.close,resArr.volume),
         macd = macd.reverse(),
         ema_2_days = ema_2_days.reverse(),
         ema_5_days = ema_5_days.reverse(),
@@ -210,9 +229,10 @@ let createStructure = function(candles,resArr,fn) {
         'kstSignal': kst.signal,
         'rsi': rsi
     }*/
+
     var newData=[];
     for(var i=0;i<candles.length;i++){
-        if(macd[i] && ema_2_days[i] && ema_5_days[i] && adx[i] && rsi[i] && kst[i]){
+        if(macd[i] && ema_2_days[i] && ema_5_days[i] && adx[i] && rsi[i] && kst[i] && forceIndex[i]){
             
             newData.push({
             'date':candles[i][0],
@@ -230,7 +250,8 @@ let createStructure = function(candles,resArr,fn) {
             'mdm': adx[i].mdi,
             'kst': kst[i].kst,
             'kstSignal': kst[i].signal,
-            'rsi': rsi[i]
+            'rsi': rsi[i],
+            'forceIndex':forceIndex[i]
          });    
         }else{
             i=candles.length;
@@ -273,6 +294,7 @@ module.exports = {
     'averageTrueRange': averageTrueRange,
     'getADX': getADX,
     'getKST': getKST,
-    'getRSI': getRSI
+    'getRSI': getRSI,
+    'getForceIndex':getForceIndex
     //'getAccessToken':getAccessToken
 };
