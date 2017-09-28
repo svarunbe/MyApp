@@ -107,14 +107,14 @@ let getForceIndex = function(period, close,volume) {
 let getKST = function(period, high, low, close) {
     var input = {
         values: close,
-        ROCPer1: 5,
-        ROCPer2: 10,
-        ROCPer3: 15,
-        ROCPer4: 20,
-        SMAROCPer1: 5,
-        SMAROCPer2: 10,
-        SMAROCPer3: 15,
-        SMAROCPer4: 20,
+        ROCPer1: 2,
+        ROCPer2: 5,
+        ROCPer3: 10,
+        ROCPer4: 15,
+        SMAROCPer1: 2,
+        SMAROCPer2: 5,
+        SMAROCPer3: 10,
+        SMAROCPer4: 15,
         signalPeriod: 9
     };
     return KST.calculate(input)
@@ -140,7 +140,7 @@ let getShares = function(job, fn) {
                 ((lastDate.getMonth() + 1).toString().length == 1 ? '0' + (lastDate.getMonth() + 1) : (lastDate.getMonth() + 1)) +
                 '-' + lastDate.getDate();
 
-            kiteControl.historical(result[1].token, lastDate, todayDate, "5minute")
+            kiteControl.historical(result[2].token, lastDate, todayDate, "15minute")
                 .then(function(response) {
                     fn.generateData(response.data.candles, 4, _global.shares[0].strategy, function(resArr, resObj, strategy) {
                         
@@ -149,7 +149,7 @@ let getShares = function(job, fn) {
                             trendmacd = "";
                         for (var i = 0; i < structuredData.length; i++) {
                                 var d = new Date(structuredData[i].date);
-                                var today = new Date("2017-09-27T09:15:00+0530");
+                                var today = new Date();
                                 if (d.getDate() == today.getDate()) {
                                     if (strategy == "macd") {
                                     
@@ -162,12 +162,12 @@ let getShares = function(job, fn) {
                                         && structuredData[i].kst > structuredData[i].kstSignal 
                                         && structuredData[i].macd > 0 
                                         && structuredData[i].macd > structuredData[i].signal) {
-                                        console.log("buy " + structuredData[i].date);
+                                        console.log("buy " + structuredData[i].date+" "+structuredData[i].close);
                                         trendmacd = "up";
                                         profitMacd -= structuredData[i].close;
                                     } else if (trendmacd == "up" 
                                         && structuredData[i].kst < structuredData[i].kstSignal) {
-                                        console.log("sell " + structuredData[i].date);
+                                        console.log("sell " + structuredData[i].date+" "+structuredData[i].close);
                                         trendmacd = "down";
                                         profitMacd += structuredData[i].close;
                                     }
@@ -199,11 +199,11 @@ let createStructure = function(candles,resArr,fn) {
     var macd = fn.getMACD(resArr.close, 5, 10),
         ema_2_days = fn.getEMA(resArr.close, 2),
         ema_5_days = fn.getEMA(resArr.close, 5),
-        rsi = fn.getRSI(7, resArr.close),
+        rsi = fn.getRSI(7,resArr.close),
         //avgTrueRange = fn.averageTrueRange(7, resArr.high, resArr.low, resArr.close),
-        adx = fn.getADX(7, resArr.high, resArr.low, resArr.close),
+        adx = fn.getADX(5, resArr.high, resArr.low, resArr.close),
         kst = fn.getKST(7, resArr.high, resArr.low, resArr.close),
-        forceIndex =fn.getForceIndex(7,resArr.close,resArr.volume),
+        forceIndex =fn.getForceIndex(5,resArr.close,resArr.volume),
         macd = macd.reverse(),
         ema_2_days = ema_2_days.reverse(),
         ema_5_days = ema_5_days.reverse(),
