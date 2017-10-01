@@ -8,6 +8,7 @@ var bodyParser = require('body-parser');
 var index = require('./routes/index');
 var users = require('./routes/users');
 
+
 var app = express();
 
 // view engine setup
@@ -25,36 +26,24 @@ app.use(express.static(path.join(__dirname, '../client/dist')));
 app.use('/', index);
 app.use('/orders', users);
 
-// catch 404 and forward to error handler
-app.use(function(req, res, next) {
-  var err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
-
-// error handler
-app.use(function(err, req, res, next) {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
-
-  // render the error page
-  res.status(err.status || 500);
-  res.send('error in file');
-});
 
 var KiteConnect = require("kiteconnect").KiteConnect;
 kiteControl= new KiteConnect("vbpw084agezv9xvp");
 
 _global={
 	"shares":[],
-	"access_token":"5i2yavbzjijthu4rsgh3dlbdqwvewbww",
+	"access_token":"sy2m22277abzrvmiv2osm764wsrekpfg",
 	"user_id":"",
-	"public_token":""
+	"public_token":"",
+	"cronJob":[]
 };
+
+_cronRecord=[];
+
+// https://kite.trade/connect/login?api_key=vbpw084agezv9xvp
 //var cronJob = require('./strategies/strategyCronJob.js');
 //cronJob.startCronJob();
-var cronJob = require('./strategies/runningCronJob.js');
-//cronJob.getAccessToken();
-cronJob.runCronJob();
+var shree = require('./strategies/init.js');
+shree.kiteLogin(_global.access_token);
+
 module.exports = app;
