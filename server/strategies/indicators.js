@@ -73,6 +73,61 @@ var indicators = {
 
     getEMA: function(data, period) {
         return EMA.calculate({ period: period, values: data });
+    },
+    getSuperTrend: function(startFrom, Multiplier, data) {
+        for (var p = startFrom; p < data.length; p++) {
+
+            if (data[p]) {
+                var avgVal = (data[p].high + data[p].low) / 2,
+                v = (Multiplier * data[p].avgTrueRange), g = avgVal - v, x = avgVal + v;
+
+                if (p &&
+                    data[p - 1] &&
+                    data[p - 1].close &&
+                    (data[p - 1].close > data[p - 1]["_uptrend"]) &&
+                    (data[p - 1]["_uptrend"] > g)) {
+                    x = data[p - 1]["_downtrend"]
+                }
+
+
+                data[p]["direction_supertrend"] = 1;
+
+                    if (p) {
+                        data[p]["direction_supertrend"] = data[p - 1]["direction_supertrend"];
+
+                            if (data[p].close > data[p - 1]["_downtrend"]) {
+                                data[p]["direction_supertrend"] = 1
+                            } else {
+                                if (data[p].close > data[p - 1]["_uptrend"]) {
+                                    (data[p]["direction_supertrend"] = -1)
+                                }
+                            }
+                    }
+
+
+                data[p]["_uptrend"] = g,
+
+                    data[p]["_downtrend"] = x,
+
+                    data[p]["trend"] = (data[p]["direction_supertrend"] > 0) ? g : x;
+
+
+                    if (p) {
+                        if (data[p - 1]["direction_supertrend"] > 0) {
+                            data[p - 1]["_downtrend"] = null
+                        } else {
+                            data[p - 1]["_uptrend"] = null
+                        }
+                        if (data[p]["direction_supertrend"] > 0) {
+                            data[p]["_uptrend"] = g
+                        } else {
+                            data[p]["_downtrend"] = x
+                        }
+
+                    }
+            }
+        }
+        return data;
     }
 }
 

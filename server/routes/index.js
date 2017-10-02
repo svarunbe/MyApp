@@ -5,9 +5,9 @@ var init = require('../strategies/init.js');
 router.get('/', function(req, res) {
 	res.send('im the home page!');  	
 });
-router.get('/add/:task/:token', function(req, res) {
+router.get('/add/:task', function(req, res) {
     var obj={
-		token:req.params.token,
+		token:_global.shares[req.params.task],
 		timeline:"15minute",
 		taskName:req.params.task,
 		start:false

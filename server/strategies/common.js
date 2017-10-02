@@ -48,15 +48,17 @@ var common = {
             candels15Min = candels15Min.reverse();
 
         var newData = [];
-
+        var ohlc = 0;
         for (var i = 0; i < candels15Min.length; i++) {
 
             if (macdFifteenMin[i] && ema_2_daysFifteenMin[i] &&
                 ema_5_daysFifteenMin[i] &&
                 adxFifteenMin[i] && kstFifteenMin[i] && avgTrueRange) {
-
+                ohlc = candels15Min[i].open + candels15Min[i].high + candels15Min[i].low + candels15Min[i].close
+                ohlc = ohlc / 4;
                 newData.push({
                     'date': candels15Min[i].date,
+                    'open': candels15Min[i].open,
                     'high': candels15Min[i].high,
                     'low': candels15Min[i].low,
                     'close': candels15Min[i].close,
@@ -70,14 +72,17 @@ var common = {
                     'mdmFifteenMin': adxFifteenMin[i].mdi,
                     'kstFifteenMin': kstFifteenMin[i].kst,
                     'kstSignalFifteenMin': kstFifteenMin[i].signal,
-                    'avgTrueRange': avgTrueRange[i]
+                    'avgTrueRange': avgTrueRange[i],
+                    'ohlc': ohlc
                 });
 
             } else {
                 i = candels15Min.length;
             }
         }
+
         newData = newData.reverse();
+        //newData = fn.getSuperTrend(0, 3, newData);
         callback4(null, newData);
     },
     generateData: function(resData, closing, callback2, callback3) {
@@ -108,40 +113,30 @@ var common = {
     runStrategy: function(token, structuredData) {
         var profitMacd = 0,
             trendmacd = "";
-        //console.log(structuredData);
+
+
         for (var i = 0; i < structuredData.length; i++) {
+
             var d = new Date(structuredData[i].date);
-            var today = new Date();
-            var upper = ((structuredData[i].high + structuredData[i].low) / 2) + 3 * structuredData[i].avgTrueRange;
-            var lower = ((structuredData[i].high + structuredData[i].low) / 2) - 3 * structuredData[i].avgTrueRange;
-
-            if (structuredData[i].close < upper && trendmacd != "up") {
-                trendmacd = "up"
-                console.log("buy " + structuredData[i].date + " " + structuredData[i].close);
-            } else if (structuredData[i].close > lower && trendmacd != "down") {
-                trendmacd = "down"
-                console.log("sell " + structuredData[i].date + " " + structuredData[i].close);
+            var today = new Date("2017-09-29T09:15:00+0530");
+            if (d.getDate() == today.getDate()) {
+                
+                    if (trendmacd != "up" &&
+                        structuredData[i].kstFifteenMin > structuredData[i].kstSignalFifteenMin &&
+                        structuredData[i].ema_2_daysFifteenMin > structuredData[i].ema_5_daysFifteenMin &&
+                        structuredData[i].macdFifteenMin > structuredData[i].signalFifteenMin) {
+                        console.log("buy " + structuredData[i].date + " " + structuredData[i].ohlc);
+                        trendmacd = "up";
+                        profitMacd -= structuredData[i].ohlc;
+                    } else if (trendmacd == "up" &&
+                        (structuredData[i].ema_2_daysFifteenMin < structuredData[i].ema_5_daysFifteenMin ||
+                        structuredData[i].kstFifteenMin < structuredData[i].kstSignalFifteenMin)) {
+                        console.log("sell " + structuredData[i].date + " " + structuredData[i].ohlc);
+                        trendmacd = "down";
+                        profitMacd += structuredData[i].ohlc;
+                    }
+                
             }
-
-            //console.log(structuredData[i].date);
-            // if (true) {
-            //     if (trendmacd != "up" &&
-            //         structuredData[i].kstFifteenMin > structuredData[i].kstSignalFifteenMin &&
-            //         structuredData[i].ema_2_daysFifteenMin > structuredData[i].ema_5_daysFifteenMin && 
-            //         structuredData[i].macdFifteenMin > structuredData[i].signalFifteenMin) {
-            //         console.log("buy " + structuredData[i].date + " " + structuredData[i].close);
-            //         trendmacd = "up";
-            //         profitMacd -= structuredData[i].close;
-            //     } else if (trendmacd == "up" && 
-            //         (structuredData[i].ema_2_daysFifteenMin < structuredData[i].ema_5_daysFifteenMin
-            //     ||  structuredData[i].kstFifteenMin < structuredData[i].kstSignalFifteenMin))
-            //          {
-            //         console.log("sell " + structuredData[i].date + " " + structuredData[i].close);
-            //         trendmacd = "down";
-            //         profitMacd += structuredData[i].close;
-            //     }
-            // }
-
         }
         console.log(profitMacd + "  " + token);
 

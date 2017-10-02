@@ -26,7 +26,7 @@ let kiteLogin = function(session_token, job, fn) {
         })
         .catch(function(err) {
             console.log(err.response);
-            crons.init();
+            //crons.init();
         })
 
     function init(access_token, user_id, public_token) {
