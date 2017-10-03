@@ -57,7 +57,7 @@ var cron = {
         var params = this.getRequireParams();
         async.autoInject({
             get_data: function(callback1) {
-                common.get15minuteHistorical(task.token, params.prevDate, params.today, callback1);
+                common.get15minuteHistorical(task.token, params.prevDate, params.today,task.timeline, callback1);
             },
             generate_data: function(get_data,callback3) {
                 common.generateData(get_data.data.candles,4, function(resArr,resObj,candels,callback2) {

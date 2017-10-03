@@ -6,6 +6,7 @@
     "start": "node ./bin/www"
   },
   "dependencies": {
+    "async": "^2.5.0",
     "bluebird": "^3.5.0",
     "body-parser": "~1.17.1",
     "cookie-parser": "~1.4.3",
@@ -19,6 +20,7 @@
     "round-to": "^2.0.0",
     "serve-favicon": "~2.4.2",
     "socket.io": "^2.0.3",
-    "technicalindicators": "^1.0.20"
+    "technicalindicators": "^1.0.20",
+    "underscore": "^1.8.3"
   }
 }

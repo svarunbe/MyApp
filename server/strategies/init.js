@@ -19,13 +19,14 @@ let getAccessToken = function() {
         });
     });
 }
-let kiteLogin = function(session_token, job, fn) {
+let kiteLogin = function(session_token,res,callback) {
     kiteControl.requestAccessToken(session_token, "1ogeryewziiava62tj3iwkscjzv4ke10")
         .then(function(response) {
             init(response.data.access_token, response.data.user_id, response.data.public_token);
+            callback(null,response);
         })
         .catch(function(err) {
-            console.log(err.response);
+            callback(err.response);
             //crons.init();
         })
 

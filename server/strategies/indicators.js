@@ -74,6 +74,9 @@ var indicators = {
     getEMA: function(data, period) {
         return EMA.calculate({ period: period, values: data });
     },
+    getSMA: function(data, period) {
+        return SMA.calculate({ period: period, values: data });
+    },
     getSuperTrend: function(startFrom, Multiplier, data) {
         for (var p = startFrom; p < data.length; p++) {
 

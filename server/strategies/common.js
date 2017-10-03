@@ -20,9 +20,9 @@ var common = {
                 callback(err, "error");
             });
     },
-    get15minuteHistorical: function(stockToken, lastDate, todayDate, callback1) {
+    get15minuteHistorical: function(stockToken, lastDate, todayDate,timeline, callback1) {
 
-        kiteControl.historical(stockToken, lastDate, todayDate, "15minute")
+        kiteControl.historical(stockToken, lastDate, todayDate,timeline)
             .then(function(response) {
                 callback1(null, response);
             })
@@ -32,14 +32,15 @@ var common = {
             });
     },
     createStructure: function(candels15Min, fifteenMinData, fn, callback4) {
-        var macdFifteenMin = fn.getMACD(fifteenMinData.close, 12, 26),
+        var macdFifteenMin = fn.getMACD(fifteenMinData.close, 13, 26),
             ema_2_daysFifteenMin = fn.getEMA(fifteenMinData.close, 2),
             ema_5_daysFifteenMin = fn.getEMA(fifteenMinData.close, 5),
             avgTrueRange = fn.averageTrueRange(7, fifteenMinData.high, fifteenMinData.low, fifteenMinData.close),
             adxFifteenMin = fn.getADX(5, fifteenMinData.high, fifteenMinData.low, fifteenMinData.close),
             kstFifteenMin = fn.getKST(9, fifteenMinData.high, fifteenMinData.low, fifteenMinData.close),
-
+            sma_5_days = fn.getSMA(fifteenMinData.close, 5),
             macdFifteenMin = macdFifteenMin.reverse(),
+            sma_5_days = sma_5_days.reverse(),
             ema_2_daysFifteenMin = ema_2_daysFifteenMin.reverse(),
             ema_5_daysFifteenMin = ema_5_daysFifteenMin.reverse(),
             adxFifteenMin = adxFifteenMin.reverse(),
@@ -67,6 +68,7 @@ var common = {
                     'signalFifteenMin': macdFifteenMin[i].signal,
                     'ema_2_daysFifteenMin': ema_2_daysFifteenMin[i],
                     'ema_5_daysFifteenMin': ema_5_daysFifteenMin[i],
+                    'sma_5_days':sma_5_days[i],
                     'adxFifteenMin': adxFifteenMin[i].adx,
                     'pdmFifteenMin': adxFifteenMin[i].pdi,
                     'mdmFifteenMin': adxFifteenMin[i].mdi,
@@ -114,31 +116,41 @@ var common = {
         var profitMacd = 0,
             trendmacd = "";
 
-
+        var p ={
+            price : 0,
+            success:0,
+            failed:0,
+        }
         for (var i = 0; i < structuredData.length; i++) {
 
             var d = new Date(structuredData[i].date);
-            var today = new Date("2017-09-29T09:15:00+0530");
-            if (d.getDate() == today.getDate()) {
+            var today = new Date();
+            if (true) {
                 
-                    if (trendmacd != "up" &&
+                    if (trendmacd != "up" && structuredData[i-1] && 
                         structuredData[i].kstFifteenMin > structuredData[i].kstSignalFifteenMin &&
-                        structuredData[i].ema_2_daysFifteenMin > structuredData[i].ema_5_daysFifteenMin &&
+                        structuredData[i].ema_2_daysFifteenMin > structuredData[i].sma_5_days &&
+                        structuredData[i].sma_5_days > structuredData[i-1].sma_5_days  &&
                         structuredData[i].macdFifteenMin > structuredData[i].signalFifteenMin) {
                         console.log("buy " + structuredData[i].date + " " + structuredData[i].ohlc);
                         trendmacd = "up";
+                        p.price=structuredData[i].ohlc;
                         profitMacd -= structuredData[i].ohlc;
-                    } else if (trendmacd == "up" &&
-                        (structuredData[i].ema_2_daysFifteenMin < structuredData[i].ema_5_daysFifteenMin ||
-                        structuredData[i].kstFifteenMin < structuredData[i].kstSignalFifteenMin)) {
-                        console.log("sell " + structuredData[i].date + " " + structuredData[i].ohlc);
+                    } else if (trendmacd == "up" 
+                        &&  structuredData[i].ema_2_daysFifteenMin < structuredData[i].sma_5_days) {
                         trendmacd = "down";
                         profitMacd += structuredData[i].ohlc;
+                        if(p.price > structuredData[i].ohlc){
+                            p.failed++;
+                            console.log("sell " + structuredData[i].date + " " + structuredData[i].ohlc);
+                        }else{
+                            p.success++;
+                        }
                     }
                 
             }
         }
-        console.log(profitMacd + "  " + token);
+        console.log(profitMacd + "  " + token +" successful "+p.success+ " failed "+p.failed);
 
 
     },

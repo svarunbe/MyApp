@@ -5,10 +5,19 @@ var init = require('../strategies/init.js');
 router.get('/', function(req, res) {
 	res.send('im the home page!');  	
 });
+router.get('/kitelogin/:access_token',function(req,res) {
+	init.kiteLogin(req.params.access_token,res,function(err,message){
+		if(!err){
+			res.send(message);  		
+		}else{
+			res.send(err);  		
+		}
+	});
+});
 router.get('/add/:task', function(req, res) {
     var obj={
 		token:_global.shares[req.params.task],
-		timeline:"15minute",
+		timeline:"5minute",
 		taskName:req.params.task,
 		start:false
 	}
