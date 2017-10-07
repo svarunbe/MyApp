@@ -9,8 +9,8 @@ import 'rxjs/add/operator/map';
 export class OrdersComponent{
 	heroes = [];
   	constructor(http: Http) {
-  	
-    http.get('/orders')
+
+    http.get('/shares')
       // Call map on the response observable to get the parsed people object
       .map(res => res.json())
       // Subscribe to the observable to get the parsed people object and attach it to the

@@ -3,7 +3,18 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { HttpModule }    from '@angular/http';
 import {HttpClientModule} from '@angular/common/http';
+
+import { FormsModule }    from '@angular/forms';
+import { BaseRequestOptions } from '@angular/http';
+
 import { AppComponent } from './app.component';
+
+import { AuthenticationService, UserService ,AuthGuard} from './_services/index';
+
+
+import { LoginComponent } from './login/login.component';
+import { HomeComponent } from './home/home.component';
+
 import { LeftComponent } from './left/left.component';
 import { RightComponent } from './right/right.component';
 import { OrdersComponent } from './right/orders/orders.component';
@@ -14,10 +25,18 @@ import { SharesComponent } from './right/shares/shares.component';
 
 const appRoutes: Routes = [
   //{ path: '', redirectTo: '/orders', pathMatch: 'full' },
-  { path: 'orders', component: OrdersComponent },
-  { path: 'strategies', component: StrategyComponent },
-  { path: 'alerts', component: AlertsComponent },
-  { path: '', component: SharesComponent }
+
+  { path: 'login', component: LoginComponent },
+  { path: '', component: HomeComponent,
+    children: [
+      {path: '', redirectTo: 'orders'},
+      { path: 'orders', component: OrdersComponent },
+      { path: 'strategies', component: StrategyComponent },
+      { path: 'alerts', component: AlertsComponent },
+      { path: 'shares', component: SharesComponent },
+    ],
+   canActivate: [AuthGuard] },
+  { path: '**', redirectTo: '' }
   // {
   //   path: 'heroes',
   //   component: HeroListComponent,
@@ -33,6 +52,8 @@ const appRoutes: Routes = [
 @NgModule({
   declarations: [
     AppComponent,
+    HomeComponent,
+    LoginComponent,
     LeftComponent,
     RightComponent,
     OrdersComponent,
@@ -44,13 +65,18 @@ const appRoutes: Routes = [
   imports: [
     BrowserModule,
     HttpModule,
+    FormsModule,
      HttpClientModule,
     RouterModule.forRoot(
       appRoutes,
       { enableTracing: true } // <-- debugging purposes only
     )
   ],
-  providers: [],
+  providers: [
+     AuthGuard,
+     AuthenticationService,
+     UserService,
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
