@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 // import { Subject } from 'rxjs/Subject';
 // import { Observable } from 'rxjs/Observable';
-import * as io from 'socket.io-client';
+//import * as io from 'socket.io-client';
 @Component({
   selector: 'app-right',
   templateUrl: './right.component.html',
@@ -12,10 +12,10 @@ export class RightComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-  	this.socket = io.connect();
-  	//this.socket.emit('add-message', "message");    
-  	this.socket.on('news', (data) => {
-        console.log(data);
-      }); 
+  	//this.socket = io.connect();
+  	//this.socket.emit('add-message', "message");
+  	// this.socket.on('news', (data) => {
+   //      console.log(data);
+   //    });
   }
 }

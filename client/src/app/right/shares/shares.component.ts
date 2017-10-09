@@ -12,11 +12,11 @@ export class SharesComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,private http:Http) {
-  	http.get('/orders/request_token')
-		      // Call map on the response observable to get the parsed people object
-          .subscribe(params => {
+  	// http.get('/orders/request_token')
+		 //      // Call map on the response observable to get the parsed people object
+   //        .subscribe(params => {
 
-        })
+   //      })
   }
 
   ngOnInit() {

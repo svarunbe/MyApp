@@ -29,13 +29,14 @@ const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
   { path: '', component: HomeComponent,
     children: [
-      {path: '', redirectTo: 'orders'},
+      {path: '', redirectTo: 'orders' ,pathMatch:"full"},
       { path: 'orders', component: OrdersComponent },
       { path: 'strategies', component: StrategyComponent },
       { path: 'alerts', component: AlertsComponent },
       { path: 'shares', component: SharesComponent },
     ],
-   canActivate: [AuthGuard] },
+   canActivate: [AuthGuard]
+ },
   { path: '**', redirectTo: '' }
   // {
   //   path: 'heroes',

@@ -7,15 +7,19 @@ import 'rxjs/add/operator/map';
   styleUrls: ['./orders.component.css']
 })
 export class OrdersComponent{
-	heroes = [];
+	result = [];
   	constructor(http: Http) {
 
-    http.get('/shares')
-      // Call map on the response observable to get the parsed people object
-      .map(res => res.json())
-      // Subscribe to the observable to get the parsed people object and attach it to the
-      // component
-      .subscribe(people => this.heroes=people.data[0].orders);
+    http.post('/shares',{})
+      .subscribe(
+        result => {
+            this.result =result.json().data;
+      },
+      error => {
+        console.log("somethig wend wrong");
+      }
+      )
+
   }
 
 }

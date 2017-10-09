@@ -4,7 +4,18 @@ var init = require('../strategies/init.js');
 let mongo = require('../modules/mongoConnection.js');
 let auth = require('../modules/auth.js');
 
-
+router.post('/shares', function(req, res) {
+	mongo.connection((db) => {
+        db.collection('shares').find({}).toArray(function(err, result) {
+            if (err) {
+            	res.json("error");
+            }else{
+            	res.json(result[0]);	
+            }            
+            db.close();
+        });
+    });
+});
 router.post('/signup/:username/:password', function(req, res) {
 
     if (!req.params.username) {
